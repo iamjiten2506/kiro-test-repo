@@ -1,5 +1,5 @@
 import re
-
+# test change for kiro review
 # Module-level compiled regex for email validation (compiled once, reused)
 _EMAIL_PATTERN = re.compile(
     r"^[a-zA-Z0-9._%+\-][a-zA-Z0-9._%+-]*@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
