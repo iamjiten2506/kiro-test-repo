@@ -1,2 +1,2 @@
 # Kiro Test Repo
-## Test change for Kiro review
+Welcome to the Kiro Test Repository! This project is used for testing and experimentation
