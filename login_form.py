@@ -14,10 +14,9 @@ def validate_email(email):
     """Validate email format using regex.
 
     Returns a dict with 'valid' (bool) and 'errors' (list of strings).
-    Raises ValueError if email is None, empty, or whitespace-only.
     """
     if email is None or not isinstance(email, str) or email.strip() == "":
-        raise ValueError("Email is required")
+        return {"valid": False, "errors": ["Email is required"]}
 
     if len(email) > _MAX_EMAIL_LENGTH:
         return {"valid": False, "errors": ["Email must not exceed 254 characters"]}
@@ -34,12 +33,11 @@ def validate_password(password):
     Returns a dict with 'valid' (bool) and 'errors' (list of strings).
     Checks: min 8 chars, max 128 chars, at least one uppercase, one lowercase,
     one digit, one special character.
-    Raises ValueError if password is None or empty string.
     """
     errors = []
 
-    if password is None or not isinstance(password, str) or password == "":
-        raise ValueError("Password is required")
+    if password is None or not isinstance(password, str):
+        return {"valid": False, "errors": ["Password is required"]}
 
     if len(password) > _MAX_PASSWORD_LENGTH:
         errors.append("Password must not exceed 128 characters")
@@ -67,8 +65,6 @@ def validate_login_form(email, password):
 
     Returns a dict with 'valid' (bool) and 'errors' (dict with 'email' and
     'password' keys, both lists of strings).
-    Raises ValueError if email or password is None, empty, or
-    (for email) whitespace-only.
     """
     email_result = validate_email(email)
     password_result = validate_password(password)

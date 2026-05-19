@@ -37,19 +37,19 @@ class TestValidateEmail(unittest.TestCase):
         self.assertEqual(result["errors"], [])
 
     def test_invalid_email_empty_string(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_email("")
-        self.assertEqual(str(ctx.exception), "Email is required")
+        result = validate_email("")
+        self.assertFalse(result["valid"])
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_none(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_email(None)
-        self.assertEqual(str(ctx.exception), "Email is required")
+        result = validate_email(None)
+        self.assertFalse(result["valid"])
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_whitespace_only(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_email("   ")
-        self.assertEqual(str(ctx.exception), "Email is required")
+        result = validate_email("   ")
+        self.assertFalse(result["valid"])
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_missing_at(self):
         result = validate_email("userexample.com")
@@ -107,14 +107,9 @@ class TestValidatePassword(unittest.TestCase):
         self.assertEqual(result["errors"], [])
 
     def test_invalid_password_none(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_password(None)
-        self.assertEqual(str(ctx.exception), "Password is required")
-
-    def test_invalid_password_empty_string(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_password("")
-        self.assertEqual(str(ctx.exception), "Password is required")
+        result = validate_password(None)
+        self.assertFalse(result["valid"])
+        self.assertIn("Password is required", result["errors"])
 
     def test_invalid_password_too_short(self):
         result = validate_password("Ab1!")
@@ -199,25 +194,23 @@ class TestValidateLoginForm(unittest.TestCase):
         self.assertEqual(result["errors"]["email"], [])
         self.assertTrue(len(result["errors"]["password"]) > 0)
 
-    def test_valid_email_empty_password(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_login_form("user@example.com", "")
-        self.assertEqual(str(ctx.exception), "Password is required")
-
-    def test_both_invalid_empty(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_login_form("", "")
-        self.assertEqual(str(ctx.exception), "Email is required")
+    def test_both_invalid(self):
+        result = validate_login_form("", "")
+        self.assertFalse(result["valid"])
+        self.assertTrue(len(result["errors"]["email"]) > 0)
+        self.assertTrue(len(result["errors"]["password"]) > 0)
 
     def test_none_inputs(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_login_form(None, None)
-        self.assertEqual(str(ctx.exception), "Email is required")
+        result = validate_login_form(None, None)
+        self.assertFalse(result["valid"])
+        self.assertIn("Email is required", result["errors"]["email"])
+        self.assertIn("Password is required", result["errors"]["password"])
 
     def test_whitespace_only_inputs(self):
-        with self.assertRaises(ValueError) as ctx:
-            validate_login_form("   ", "   ")
-        self.assertEqual(str(ctx.exception), "Email is required")
+        result = validate_login_form("   ", "   ")
+        self.assertFalse(result["valid"])
+        self.assertIn("Email is required", result["errors"]["email"])
+        self.assertTrue(len(result["errors"]["password"]) > 0)
 
 
 if __name__ == "__main__":
