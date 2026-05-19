@@ -9,77 +9,88 @@ class TestValidateEmail(unittest.TestCase):
     def test_valid_email_simple(self):
         result = validate_email("user@example.com")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["error"])
+        self.assertEqual(result["errors"], [])
 
     def test_valid_email_with_dots(self):
         result = validate_email("first.last@example.com")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["error"])
+        self.assertEqual(result["errors"], [])
 
     def test_valid_email_with_plus(self):
         result = validate_email("user+tag@example.com")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["error"])
+        self.assertEqual(result["errors"], [])
+
+    def test_valid_email_starting_with_plus(self):
+        result = validate_email("+user@example.com")
+        self.assertTrue(result["valid"])
+        self.assertEqual(result["errors"], [])
 
     def test_valid_email_subdomain(self):
         result = validate_email("user@mail.example.co.uk")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["error"])
+        self.assertEqual(result["errors"], [])
 
     def test_valid_email_with_numbers(self):
         result = validate_email("user123@example456.com")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["error"])
+        self.assertEqual(result["errors"], [])
 
     def test_invalid_email_empty_string(self):
         result = validate_email("")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Email is required")
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_none(self):
         result = validate_email(None)
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Email is required")
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_whitespace_only(self):
         result = validate_email("   ")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Email is required")
+        self.assertIn("Email is required", result["errors"])
 
     def test_invalid_email_missing_at(self):
         result = validate_email("userexample.com")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_missing_domain(self):
         result = validate_email("user@")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_missing_username(self):
         result = validate_email("@example.com")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_double_at(self):
         result = validate_email("user@@example.com")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_no_tld(self):
         result = validate_email("user@example")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_short_tld(self):
         result = validate_email("user@example.c")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
 
     def test_invalid_email_spaces(self):
         result = validate_email("user @example.com")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["error"], "Invalid email format")
+        self.assertIn("Invalid email format", result["errors"])
+
+    def test_invalid_email_too_long(self):
+        long_email = "a" * 245 + "@example.com"
+        result = validate_email(long_email)
+        self.assertFalse(result["valid"])
+        self.assertIn("Email must not exceed 254 characters", result["errors"])
 
 
 class TestValidatePassword(unittest.TestCase):
@@ -153,6 +164,14 @@ class TestValidatePassword(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["errors"], [])
 
+    def test_invalid_password_too_long(self):
+        long_password = "Aa1!" + "x" * 125
+        result = validate_password(long_password)
+        self.assertFalse(result["valid"])
+        self.assertIn(
+            "Password must not exceed 128 characters", result["errors"]
+        )
+
 
 class TestValidateLoginForm(unittest.TestCase):
     """Tests for validate_login_form function."""
@@ -160,37 +179,37 @@ class TestValidateLoginForm(unittest.TestCase):
     def test_all_valid(self):
         result = validate_login_form("user@example.com", "Passw0rd!")
         self.assertTrue(result["valid"])
-        self.assertIsNone(result["errors"]["email"])
+        self.assertEqual(result["errors"]["email"], [])
         self.assertEqual(result["errors"]["password"], [])
 
     def test_invalid_email_valid_password(self):
         result = validate_login_form("invalid", "Passw0rd!")
         self.assertFalse(result["valid"])
-        self.assertIsNotNone(result["errors"]["email"])
+        self.assertTrue(len(result["errors"]["email"]) > 0)
         self.assertEqual(result["errors"]["password"], [])
 
     def test_valid_email_invalid_password(self):
         result = validate_login_form("user@example.com", "weak")
         self.assertFalse(result["valid"])
-        self.assertIsNone(result["errors"]["email"])
+        self.assertEqual(result["errors"]["email"], [])
         self.assertTrue(len(result["errors"]["password"]) > 0)
 
     def test_both_invalid(self):
         result = validate_login_form("", "")
         self.assertFalse(result["valid"])
-        self.assertIsNotNone(result["errors"]["email"])
+        self.assertTrue(len(result["errors"]["email"]) > 0)
         self.assertTrue(len(result["errors"]["password"]) > 0)
 
     def test_none_inputs(self):
         result = validate_login_form(None, None)
         self.assertFalse(result["valid"])
-        self.assertEqual(result["errors"]["email"], "Email is required")
+        self.assertIn("Email is required", result["errors"]["email"])
         self.assertIn("Password is required", result["errors"]["password"])
 
     def test_whitespace_only_inputs(self):
         result = validate_login_form("   ", "   ")
         self.assertFalse(result["valid"])
-        self.assertEqual(result["errors"]["email"], "Email is required")
+        self.assertIn("Email is required", result["errors"]["email"])
         self.assertTrue(len(result["errors"]["password"]) > 0)
 
 
